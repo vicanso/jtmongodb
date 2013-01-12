@@ -1,0 +1,21 @@
+{
+  "name" : "jtmongodb",
+  "description" : "mongodb client",
+  "version" : "0.0.1",
+  "author" : {
+    "name" : "vicanso 腻味",
+    "email" : "vicansocanbico@gmail.com"
+  },
+  "keywords" : [
+    "mongodb",
+    "database",
+    "nosql"
+  ],
+  "dependencies" : {
+    "amanda" : "latest",
+    "async" : "latest",
+    "jttask" : "latest",
+    "mongodb" : "latest",
+    "underscore" : "latest"
+  }
+}
