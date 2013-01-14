@@ -98,8 +98,8 @@ class Client
         then self.cacheObj.client value
         when 'mongodb' 
         then self.addMongodbConfig value
-        when 'timeout'
-        then self.tasks.set 'timeout', value
+        when 'timeOut'
+        then self.tasks.set 'timeOut', value
         when 'limit'
         then self.tasks.set 'limit', value
         when 'valiate'
@@ -292,7 +292,6 @@ class Client
   ###
   _serializationQuery : (args) ->
     serializationList = []
-    console.dir args
     _.each args, (arg) ->
       if! _.isFunction arg
         if _.isString arg
@@ -376,10 +375,6 @@ LOG_QUERY_TIME = () ->
 
 VALIDATE = () ->
   jsonVailidator = require('amanda') 'json'
-  # jsonVailidator.addAttribute 'even', (property, propertyValue, attributeValue, propertyAttributes, cbf) ->
-  #   console.dir '...................'
-  #   console.dir arguments
-  # console.dir jsonVailidator
   validateFunctions = 'save update insert findByIdAndUpdate'.split(' ').sort()
   Client.prototype.handle = _.wrap Client.prototype.handle, (func, args...) ->
     self = @
@@ -414,33 +409,4 @@ VALIDATE = () ->
           func.apply self, args
   VALIDATE = noop
 
-# VALIDATE()
-
-
-# schema = 
-#   adminScore : 
-#     type : 'number'
-#   buyNumber : 
-#     type : ['number', 'string']
-#   categories : 'array'
-#   clickUrl : 'string'
-#   location : 'object'
-#   locations : 'array object'
-#   score : 'number'
-#   stuffStatus : 'string'
-#   title : 'string'
-#   titles : 'array'
-#   props : 'object'
-# do () ->
-#   _.each schema, (value, key) ->
-#     if _.isString value
-#       values = value.split ' '
-#       if values.length == 1
-#         values = values[0]
-#       schema[key] = {
-#         type : values
-#       }
-#   schema = 
-#     properties : schema
-# console.dir JSON.stringify schema
 module.exports = Client 
