@@ -165,27 +165,22 @@ class JTMongodb
    * count 计算记录总数
    * @param  {String} dbName 数据库的标识名
    * @param  {String} collectionName collection的名称
-   * @param  {Object} query 查询条件
-   * @param  {Function} cbf 回调函数，默认为空函数
    * @return {JTMongodb} 
   ###
-  count : (dbName, collectionName, query, cbf = noop) ->
-    if _.isFunction query
-      cbf = query
-      query = {}
-    @client.handle dbName, collectionName, 'count', query, cbf 
+  count : (dbName, collectionName, args...) ->
+    args.unshift dbName, collectionName, 'count'
+    @client.handle.apply @client, args 
     return @
   ###*
    * save 保存一条记录
    * @param  {String} dbName 数据库的标识名
    * @param  {String} collectionName collection的名称
-   * @param  {Object} data 要保存的数据
-   * @param  {Function} cbf 回调函数，默认为空函数
    * @return {JTMongodb}
   ###
-  save : (dbName, collectionName, data, cbf = noop) ->
-    data.createdAt ?= new Date
-    @client.handle dbName, collectionName, 'save', data, cbf
+  save : (dbName, collectionName, args...) ->
+    client = @client
+    args.unshift dbName, collectionName 'save'
+    client.handle.apply client, args
     return @
   ###*
    * findByIdAndUpdate 根据id查询并更新数据
@@ -196,13 +191,14 @@ class JTMongodb
    * @param  {Function} cbf 回调函数，默认为空函数
    * @return {JTMongodb} 
   ###
-  findByIdAndUpdate : (dbName, collectionName, id, updateData, cbf = noop) ->
+  findByIdAndUpdate : (dbName, collectionName, id, updateData, args...) ->
     query = 
       _id : id
     delete updateData._id
     update = 
       '$set' : updateData
-    @update dbName, collectionName, query, update, cbf
+    args.unshift dbName, collectionName, query, update
+    @update.apply @, args
     return @
   ###*
    * update 更新数据
@@ -225,12 +221,13 @@ class JTMongodb
     return @
   insert : (dbName, collectionName, docs, args...) ->
     if !_.isArray docs
-      args.pop() new Error 'the insert data is not array!'
+      cbf = args.pop()
+      if _.isFunction cbf
+        cbf new Error 'the insert data is not array!'
       return
-    _.each docs, (doc) ->
-      doc.createdAt ?= new Date
     args.unshift dbName, collectionName, 'insert', docs
     @client.handle.apply @client, args
+    return @
   ###*
    * addSchema 添加schema
    * @param  {String} dbName 数据库的标识名

@@ -128,7 +128,8 @@ class Client
     dbInfo = @dbInfo dbName
     if !dbInfo
       mongodbConfig = @getMongodbConfig dbName
-      @_init dbName, mongodbConfig.uri, mongodbConfig.options
+      if mongodbConfig
+        @_init dbName, mongodbConfig.uri, mongodbConfig.options
   ###*
    * db 获取或设置db对象
    * @param  {String} dbName 数据库的标识名
