@@ -73,8 +73,7 @@ itemsClient.find({}, {limit : 2}, 'title score', function(err, docs){
 
 <a name="apiGetConstructor" />
 ## getConstructor
-
-返回构造函数（因为直接require的时候都会直接实例化了一个对象，一般不需要再用实例化其它的，若真有需要，可以通过此方法 获取，再去new新的实例）
+### 返回构造函数（因为直接require的时候都会直接实例化了一个对象，一般不需要再用实例化其它的，若真有需要，可以通过此方法 获取，再去new新的实例）
 
 ```js
 var jtMongodb = require('jtmongodb');
@@ -83,7 +82,8 @@ jtObj = new JTMongodb();
 ```
 
 <a name="apiSet" />
-## set 设置一些JTMongodb的配置
+## set 
+### 设置一些JTMongodb的配置
 
 ### 参数列表
 - key 配置的属性名（也可以只传一个参数，该参数以{key : value, key : value}的形式）
@@ -131,7 +131,8 @@ itemsClient.find({}, {limit : 2}, 'title score', function(err, docs){
 ```
 
 <a name="apiGetServerInfo" />
-## getServerInfo 返回mongodb服务器信息
+## getServerInfo 
+### 返回mongodb服务器信息
 
 ###参数列表
 - dbName 数据库的标识名
@@ -150,7 +151,8 @@ jtMongodb.getServerInfo('test', function(err, info){
 ```
 
 <a name="apiGetClient" />
-## getClient 获取dbName对应的的db client对象（该对象有JTMongodb的所有方法，除'getClient createConnection set'外，且所有的方法调用时不再需要传参数dbName和collectionName）
+## getClient 
+### 获取dbName对应的的db client对象（该对象有JTMongodb的所有方法，除'getClient createConnection set'外，且所有的方法调用时不再需要传参数dbName和collectionName）
 
 ###参数列表
 - dbName 数据库的标识名
@@ -178,7 +180,8 @@ client2.find({}, function(err, docs){
 ```
 
 <a name="apiGetCollection" />
-## getCollection 获取collection对象（由于collection也是动态初始化，所以获取是要通过异步来完成），collection对象的方法可以参考node-mongodb-native，但是不建议直接使用collction对象。
+## getCollection 
+### 获取collection对象（由于collection也是动态初始化，所以获取是要通过异步来完成），collection对象的方法可以参考node-mongodb-native，但是不建议直接使用collction对象。
 
 ###参数列表
 - dbName 数据库的标识名
@@ -187,7 +190,8 @@ client2.find({}, function(err, docs){
 
 
 <a name="apiFind" />
-## find mongodb的find方法
+## find 
+### mongodb的find方法
 
 ###参数列表
 - dbName 数据库的标识名
@@ -211,7 +215,8 @@ itemsClient.find({category : '衣服'}, 'title price picUrl', {skip : 10, limit 
 ```
 
 <a name="apiFindById" />
-## findById mongodb的findById
+## findById 
+### mongodb的findById
 
 ###参数列表
 - dbName 数据库的标识名
@@ -221,11 +226,13 @@ itemsClient.find({category : '衣服'}, 'title price picUrl', {skip : 10, limit 
 - cbf 回调函数
 
 <a name="apiFindOne" />
-## findOne mongodb的findOne方法（参数列表和用法参考find）
+## findOne 
+### mongodb的findOne方法（参数列表和用法参考find）
 
 
 <a name="apiCount" />
-## count mongodb的count方法
+## count 
+### mongodb的count方法
 
 ###参数列表
 - dbName 数据库的标识名
@@ -233,10 +240,12 @@ itemsClient.find({category : '衣服'}, 'title price picUrl', {skip : 10, limit 
 - args... 其它参数（参考mongodb的count方法）
 
 <a name="apiSave" />
-## save mongodb的save方法（参数列表和用法参数count）
+## save 
+### mongodb的save方法（参数列表和用法参数count）
 
 <a name="apiFindByIdAndUpdate" />
-## findByIdAndUpdate 根据id查询并更新数据（该方法把id参数转换为query，将updateDate转换为$set的内容，再调用update方法）
+## findByIdAndUpdate 
+### 根据id查询并更新数据（该方法把id参数转换为query，将updateDate转换为$set的内容，再调用update方法）
 
 ###参数列表
 - dbName 数据库的标识名
@@ -246,7 +255,8 @@ itemsClient.find({category : '衣服'}, 'title price picUrl', {skip : 10, limit 
 - args... 不定长参数
 
 <a name="apiUpdate" />
-## update 根据查询条件，更新数据
+## update 
+### 根据查询条件，更新数据
 
 ###参数列表
 - dbName 数据库的标识名
@@ -257,7 +267,8 @@ itemsClient.find({category : '衣服'}, 'title price picUrl', {skip : 10, limit 
 - cbf 回调函数
 
 <a name="apiInsert" />
-## insert 插入多条记录
+## insert 
+### 插入多条记录
 
 ###参数列表
 - dbName 数据库的标识名
@@ -266,7 +277,8 @@ itemsClient.find({category : '衣服'}, 'title price picUrl', {skip : 10, limit 
 - args... 不定长参数
 
 <a name="apiAddSchema" />
-## addSchema 添加schema（用于校验保存的数据是否正确，若未对collection添加schema，则不用校验）
+## addSchema 
+### 添加schema（用于校验保存的数据是否正确，若未对collection添加schema，则不用校验）
 
 ###参数列表
 - dbName 数据库的标识名
@@ -275,7 +287,8 @@ itemsClient.find({category : '衣服'}, 'title price picUrl', {skip : 10, limit 
 
 
 <a name="apiConvertFileds" />
-## convertFileds 将fields转换，将'title name'转换为mongodb的{title : true, name : true}的形式
+## convertFileds 
+### 将fields转换，将'title name'转换为mongodb的{title : true, name : true}的形式
 
 ###参数列表
 - fields 查询结果返回的字段（字符串以空格分隔）
