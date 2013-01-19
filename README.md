@@ -90,7 +90,7 @@ jtObj = new JTMongodb();
 - value 配置的属性值
 
 
-### 可以设置的属性如下clear
+### 可以设置的属性如下:
 - log JTMongodb使用的logger（需要实现console的相同方法）
 - queryTime 启动Query相同的时间记录（启动了之后就无法取消）
 - cacheClient JTMongodb使用的cache对象，尽量使用redis，或者实现redis相同方法的对象
@@ -130,6 +130,149 @@ itemsClient.find({}, {limit : 2}, 'title score', function(err, docs){
 });
 ```
 
+<a name="apiGetServerInfo" />
+## 返回mongodb服务器信息
+
+###参数列表
+- dbName 数据库的标识名
+- cbf 回调函数
+
+```js
+var jtMongodb = require('jtmongodb');
+jtMongodb.set('mongodb', [{
+    dbName : 'test',
+    uri : 'mongodb://127.0.0.1:10020/test'
+  }]
+);
+jtMongodb.getServerInfo('test', function(err, info){
+    console.dir(info);
+});
+```
+
+<a name="apiGetClient" />
+## 获取dbName对应的的db client对象（该对象有JTMongodb的所有方法，除'getClient createConnection set'外，且所有的方法调用时不再需要传参数dbName和collectionName）
+
+###参数列表
+- dbName 数据库的标识名
+- collectionName collection的名字（可选参数，如果未选该参数，返回的client调用方法是要带上collection名字，如果参数则不用带）
+
+```js
+var jtMongodb = require('jtmongodb');
+jtMongodb.set('mongodb', [{
+    dbName : 'test',
+    uri : 'mongodb://127.0.0.1:10020/test'
+  }]
+);
+var client1 = jtMongodb.getClient('test');
+var client2 = jtMongodb.getClient('test', 'items');
+//下面三种方法查找的结果一致
+jtMongodb.find('test', 'items', {}, function(err, docs){
+  console.dir(docs.length);
+});
+client1.find('items', {}, function(err, docs){
+  console.dir(docs.length);
+});
+client2.find({}, function(err, docs){
+  console.dir(docs.length);
+});
+```
+
+<a name="apiFind" />
+## mongodb的find方法
+
+###参数列表
+- dbName 数据库的标识名
+- collectionName collection的名称
+- query 查询条件
+- fields 查询字段（可选）
+- options 查询选项（可选，参数位置可与fields互换）
+- cbf 回调函数
+
+```js
+var jtMongodb = require('jtmongodb');
+jtMongodb.set('mongodb', [{
+    dbName : 'test',
+    uri : 'mongodb://127.0.0.1:10020/test'
+  }]
+);
+var itemsClient = jtMongodb.getClient('test', 'items');
+itemsClient.find({category : '衣服'}, 'title price picUrl', {skip : 10, limit : 30}, function(err, docs){
+  console.dir(docs.length);
+});
+```
+
+<a name="apiFindById" />
+## mongodb的findById
+
+###参数列表
+- dbName 数据库的标识名
+- collectionName collection的名称
+- id 查询的mongodb id
+- fields 查询字段（可选）
+- cbf 回调函数
+
+<a name="apiFindOne" />
+## mongodb的findOne方法（参数列表和用法参考find）
+
+
+<a name="apiCount" />
+## mongodb的count方法
+
+###参数列表
+- dbName 数据库的标识名
+- collectionName collection的名称
+- args... 其它参数（参考mongodb的count方法）
+
+<a name="apiSave" />
+## mongodb的save方法（参数列表和用法参数count）
+
+<a name="apiFindByIdAndUpdate" />
+## 根据id查询并更新数据（该方法把id参数转换为query，将updateDate转换为$set的内容，再调用update方法）
+
+###参数列表
+- dbName 数据库的标识名
+- collectionName collection的名称
+- id mongodb id
+- updateData 需要更新的数据
+- args... 不定长参数
+
+<a name="apiUpdate" />
+## 根据查询条件，更新数据
+
+###参数列表
+- dbName 数据库的标识名
+- collectionName collection的名称
+- query 查询条件
+- updateData 更新的数据
+- options 更新操作的选项（可选）
+- cbf 回调函数
+
+<a name="apiInsert" />
+## 插入多条记录
+
+###参数列表
+- dbName 数据库的标识名
+- collectionName collection的名称
+- docs 要插入的多条记录
+- args... 不定长参数
+
+<a name="apiAddSchema" />
+## 添加schema（用于校验保存的数据是否正确，若未对collection添加schema，则不用校验）
+
+###参数列表
+- dbName 数据库的标识名
+- collectionName collection的名称
+- schema schema对象
+
+
+<a name="apiConvertFileds" />
+## 将fields转换，将'title name'转换为mongodb的{title : true, name : true}的形式
+
+###参数列表
+- fields 查询结果返回的字段（字符串以空格分隔）
+
+
+##其它的方法的调用参考node-mongodb-native
 
 
 

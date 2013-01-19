@@ -41,17 +41,7 @@ class JTMongodb
     @client.getServerInfo dbName, cbf
     return @
   ###*
-   * isInitDb 判断数据库是否已初始化（因为数据库可以动态初始化，在使用前并不需要等待初始化的完成）
-   * @param  {String}  dbName 数据库的标识名
-   * @return {Boolean} 
-  ###
-  isInitDb : (dbName) ->
-    if @client.db dbName
-      return true
-    else
-      return false
-  ###*
-   * getClient 获取dbName对应的的db client对象（该对象有JTMongodb的所有方法，除'getClient createConnection isInitDb set'外，且所有的方法调用时不再需要传参数dbName）
+   * getClient 获取dbName对应的的db client对象（该对象有JTMongodb的所有方法，除'getClient createConnection set'外，且所有的方法调用时不再需要传参数dbName和collectionName）
    * @param  {String} dbName 数据库的标识名
    * @param  {String} {optional} collectionName collection的名字
    * @return {[type]}        [description]
@@ -59,7 +49,7 @@ class JTMongodb
   getClient : (dbName, collectionName) ->
     self = @
     client = {}
-    unwrapFunctions = 'getClient createConnection isInitDb set'.split ' '
+    unwrapFunctions = 'getClient createConnection set'.split ' '
     _.each _.functions(self), (funcName) ->
       if _.indexOf(unwrapFunctions, funcName) == -1
         client[funcName] = (args...) ->
@@ -219,6 +209,14 @@ class JTMongodb
       options = null
     @client.handle dbName, collectionName, 'update', query, updateData, options, cbf
     return @
+  ###*
+   * insert 插入多条记录
+   * @param  {String} dbName 数据库的标识名
+   * @param  {String} collectionName collection的名称
+   * @param  {Array} docs 要插入的多条记录
+   * @param  {Array} args... 不定长参数
+   * @return {[type]}                [description]
+  ###
   insert : (dbName, collectionName, docs, args...) ->
     if !_.isArray docs
       cbf = args.pop()
