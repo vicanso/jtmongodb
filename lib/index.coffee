@@ -59,15 +59,16 @@ class JTMongodb
           self[funcName].apply self, args
     return client
   ###*
-   * collection 获取、设置collection对象（由于collection也是动态初始化，所以获取是要通过异步来完成）
+   * getCollection 获取collection对象（由于collection也是动态初始化，所以获取是要通过异步来完成）
    * @param  {String} dbName 数据库的标识名
    * @param  {String} collectionName collection的名字
-   * @param  {Function, Collection} cbf 或该参数为Function则是获取，否则为设置
+   * @param  {Function} cbf 回调函数
    * @return {JTMongodb} 返回JTMongodb实例
   ###
   getCollection : (args...) ->
     client = @client
-    client.collection.apply client, args
+    if _.isFunction args[2]
+      client.collection.apply client, args
     return @
   ###*
    * find mongodb的find方法
@@ -215,7 +216,7 @@ class JTMongodb
    * @param  {String} collectionName collection的名称
    * @param  {Array} docs 要插入的多条记录
    * @param  {Array} args... 不定长参数
-   * @return {[type]}                [description]
+   * @return {JTMongodb}                [description]
   ###
   insert : (dbName, collectionName, docs, args...) ->
     if !_.isArray docs
