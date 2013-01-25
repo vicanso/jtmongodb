@@ -16,6 +16,8 @@ class Client
    * @return {Client} 返回Client实例
   ###
   constructor : (cacheClient) ->
+    @opts = 
+      queryFunctions : 'find findOne findById count'.split(' ').sort()
     @dbs = {}
     @dbCbfs = {}
     @dbInfos = {}
@@ -24,11 +26,9 @@ class Client
     @mongodbConfigs = {}
     QueryCache = require './querycache'
     Tasks = require 'jttask'
-    @tasks = new Tasks {
-      autoNext : false
-    }
+    @tasks = new Tasks
     @cacheObj = new QueryCache cacheClient
-    QUERY_CACHE @cacheObj
+    QUERY_CACHE @cacheObj, @opts.queryFunctions
   ###*
    * addMongodbConfig 添加mongodb的配置信息
    * @param {Object} config 配置信息 {
@@ -104,6 +104,8 @@ class Client
         then self.tasks.set 'limit', value
         when 'valiate'
         then VALIDATE()
+        when 'ttl'
+        then self.opts.ttl = value
   ###*
    * dbInfo 获取、设置db的信息
    * @param  {String} dbName 数据库的标识名
@@ -156,22 +158,23 @@ class Client
   ###
   handle : (dbName, collectionName, handleName, args..., cbf) ->
     self = @
+    if !_.isFunction cbf
+      args.push cbf
+      cbf = noop
     cacheObj = self.cacheObj
     se = self._serializationQuery _.toArray arguments
     key = cacheObj.key se, handleName
     tasks = self.tasks
-    # originCbf = args.pop()
+    ttl = self.opts.ttl
+    queryFunctions = self.opts.queryFunctions
     wrapCbf = (err, data) ->
       if data && _.isFunction data.toArray
-        data.toArray (err, data) ->
-          if data
-            cacheObj.set key, data, 60
-          cbf err, data
-          tasks.next()
+        toArrayArgs = [data, cbf]
+        toArrayArgs._se = se
+        self.tasks.add self._toArray, toArrayArgs, self
       else
-        cacheObj.set key, data, 60
+        cacheObj.set key, data, ttl
         cbf err, data
-        tasks.next()
     args.push wrapCbf
     self.collection dbName, collectionName, (err, collectionObj) ->
       if err
@@ -181,7 +184,13 @@ class Client
         id = query._id
         if id
           query._id = self._convertToObjectID id
-        self.tasks.add collectionObj[handleName], args, collectionObj
+        if handleName != 'find'
+          mergeSameHandle = false
+          if ~_.indexOf queryFunctions, handleName, true
+            mergeSameHandle = true
+          self.tasks.add collectionObj[handleName], args, mergeSameHandle, collectionObj
+        else
+          collectionObj[handleName].apply collectionObj, args
     return self 
   ###*
    * collection 获取、设置collection对象（由于collection也是动态初始化，所以获取是要通过异步来完成）
@@ -336,12 +345,16 @@ class Client
     schema = 
       properties : schema
     return schema
+  _toArray : (cursor, cbf) ->
+    cursor.toArray cbf
+    return @
+
 ###*
  * QUERY_CACHE 添加查询缓存
  * @param  {QueryCache} cacheObj [description]
 ###
-QUERY_CACHE = (cacheObj) ->
-  cacheObj.setCacheFunctions 'find findOne findById count'
+QUERY_CACHE = (cacheObj, cacheFunctions) ->
+  cacheObj.setCacheFunctions cacheFunctions
   Client.prototype.handle = _.wrap Client.prototype.handle, (func, args...) ->
     self = @
     se = self._serializationQuery args
@@ -350,6 +363,8 @@ QUERY_CACHE = (cacheObj) ->
       func.apply self, args
     else
       cbf = args[args.length - 1]
+      if !_.isFunction cbf
+        cbf = noop
       cacheObj.get key, (err, data) ->
         if !err && data
           cbf null, data
@@ -365,6 +380,9 @@ LOG_QUERY_TIME = () ->
     self = @
     queryArgs = _.toArray arguments
     cbf = args.pop()
+    if !_.isFunction cbf
+      args.push cbf
+      cbf = noop
     start = Date.now()
     cbf = _.wrap cbf, (func, err, data) ->
       se = self._serializationQuery queryArgs
@@ -394,18 +412,22 @@ VALIDATE = () ->
       checkData = data['$set']
       schema = 
         properties : _.pick schema.properties, _.keys checkData
+    cbf = args.pop()
+    if !_.isFunction cbf
+      args.push cbf
+      cbf = noop
     if _.isArray data
       async.forEachLimit data, data.length, (item, cbf) ->
         jsonVailidator.validate item, schema, cbf
       ,(err) ->
         if err
-          args.pop() err
+          cbf err
         else
           func.apply self, args
     else
       jsonVailidator.validate checkData, schema, (err) ->
         if err
-          args.pop() err
+          cbf err
         else
           func.apply self, args
   VALIDATE = noop

@@ -294,7 +294,7 @@ itemsClient.find({category : '衣服'}, 'title price picUrl', {skip : 10, limit 
 - fields 查询结果返回的字段（字符串以空格分隔）
 
 
-##其它的方法的调用参考node-mongodb-native
+### 其它的方法的调用参考node-mongodb-native
 
 
 

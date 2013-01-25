@@ -7,7 +7,6 @@ _ = require 'underscore'
 class QueryCache
   constructor : (cacheClient) ->
     @cacheClient = cacheClient
-    @queryStatus = new QueryStatus
     @cacheFunctions = []
   ###*
    * client 设置或获取缓存的client对象
@@ -40,22 +39,16 @@ class QueryCache
   ###
   get : (key, cbf = noop) ->
     cacheClient = @cacheClient
-    queryStatus = @queryStatus
     if key
-      if queryStatus.isQuering key
-        queryStatus.addQuery key, cbf
+      if !cacheClient
+        cbf null, null
       else
-        queryStatus.setQuering key
-        if !cacheClient
-          cbf null, null
-        else
-          cacheClient.hgetall key, (err, data) ->
-            if !err && data?.cache
-              cache = JSON.parse data.cache
-              queryStatus.execQuery key, cache
-              cbf null, cache
-            else
-              cbf err, null
+        cacheClient.hgetall key, (err, data) ->
+          if !err && data?.cache
+            cache = JSON.parse data.cache
+            cbf null, cache
+          else
+            cbf err, null
     else
       cbf null, null
     return @
@@ -67,7 +60,6 @@ class QueryCache
    * @return {QueryCache} 
   ###
   set : (key, data, ttl = -1) ->
-    @queryStatus.execQuery key, data
     cacheClient = @cacheClient
     if cacheClient && key && data && ttl > 0
       cacheClient.hmset key, 'cache', JSON.stringify(data), 'createTime', Date.now(), (err) ->
@@ -75,14 +67,6 @@ class QueryCache
           logger.error err
         else
           cacheClient.expire key, ttl
-    return @
-  ###*
-   * next 让等待的下一条查询执行
-   * @param  {String} key 查询条件对应的hash key
-   * @return {QueryCache} 
-  ###
-  next : (key) ->
-    @queryStatus.next key
     return @
   ###*
    * isCacheAvailable 判断该方法类型是否可缓存（有写入的操作都不缓存）
@@ -104,85 +88,85 @@ class QueryCache
       @cacheFunctions = functions.split(' ').sort()
     return @
 
-class QueryStatus
-  ###*
-   * queries 保存查询状态的列表
-   * @type {QueryStatus}
-  ###
-  constructor : () ->
-    @queries = {}
-  ###*
-   * setQuering 设置该key对应的查询为正在查询
-   * @param {String} key 查询条件对应的hash key   
-   * @type {QueryStatus}
-  ### 
-  setQuering : (key) ->
-    self = @
-    if key
-      self.queries[key] = {
-        status : 'quering'
-        execFunctions : []
-      }
-    return @
-  ###*
-   * isQuering 判断是否已有相同的查询现在进行
-   * @param  {String}  key 查询条件对应的hash key
-   * @return {Boolean}     [description]
-  ###
-  isQuering : (key) ->
-    self = @
-    if key
-      queries = self.queries
-      query = queries[key]
-      if query?.status == 'quering'
-        return true
-      else
-        return false
-    else
-      return false
-  ###*
-   * addQuery 添加查询列表（等正在查询的完成时，顺序回调所有的execFunction）
-   * @param {String} key 查询条件对应的hash key
-   * @param {Function} execFunction 查询回调函数
-   * @return {QueryCache} 
-  ###
-  addQuery : (key, execFunction) ->
-    self = @
-    if key && _.isFunction execFunction
-      queries = self.queries
-      query = queries[key]
-      if query?.execFunctions
-        query.execFunctions.push execFunction
-    return @
-  ###*
-   * execQuery 执行所有的execFunction函数
-   * @param  {String} key  查询条件对应的hash key
-   * @param  {Object} data 查询的返回的数据
-   * @return {QueryCache}     
-  ###
-  execQuery : (key, data) ->
-    self = @
-    if key && data
-      queries = self.queries
-      query = queries[key]
-      dataJSONStr = JSON.stringify data
-      if query?.execFunctions
-        _.each query.execFunctions, (execFunction) ->
-          execFunction null, JSON.parse dataJSONStr
-    delete self.queries[key]
-    return @
-  ###*
-   * next 让等待的下一条查询执行
-   * @param  {String}   key 查询条件对应的hash key
-   * @return {QueryCache}  
-  ###
-  next : (key) ->
-    self = @
-    if key
-      queries = self.queries
-      query = queries[key]
-      if query?.execFunctions.length != 0
-        execFunction = query.execFunctions.pop()
-        execFunction null, null
+# class QueryStatus
+#   ###*
+#    * queries 保存查询状态的列表
+#    * @type {QueryStatus}
+#   ###
+#   constructor : () ->
+#     @queries = {}
+#   ###*
+#    * setQuering 设置该key对应的查询为正在查询
+#    * @param {String} key 查询条件对应的hash key   
+#    * @type {QueryStatus}
+#   ### 
+#   setQuering : (key) ->
+#     self = @
+#     if key
+#       self.queries[key] = {
+#         status : 'quering'
+#         execFunctions : []
+#       }
+#     return @
+#   ###*
+#    * isQuering 判断是否已有相同的查询现在进行
+#    * @param  {String}  key 查询条件对应的hash key
+#    * @return {Boolean}     [description]
+#   ###
+#   isQuering : (key) ->
+#     self = @
+#     if key
+#       queries = self.queries
+#       query = queries[key]
+#       if query?.status == 'quering'
+#         return true
+#       else
+#         return false
+#     else
+#       return false
+#   ###*
+#    * addQuery 添加查询列表（等正在查询的完成时，顺序回调所有的execFunction）
+#    * @param {String} key 查询条件对应的hash key
+#    * @param {Function} execFunction 查询回调函数
+#    * @return {QueryCache} 
+#   ###
+#   addQuery : (key, execFunction) ->
+#     self = @
+#     if key && _.isFunction execFunction
+#       queries = self.queries
+#       query = queries[key]
+#       if query?.execFunctions
+#         query.execFunctions.push execFunction
+#     return @
+#   ###*
+#    * execQuery 执行所有的execFunction函数
+#    * @param  {String} key  查询条件对应的hash key
+#    * @param  {Object} data 查询的返回的数据
+#    * @return {QueryCache}     
+#   ###
+#   execQuery : (key, data) ->
+#     self = @
+#     if key && data
+#       queries = self.queries
+#       query = queries[key]
+#       dataJSONStr = JSON.stringify data
+#       if query?.execFunctions
+#         _.each query.execFunctions, (execFunction) ->
+#           execFunction null, JSON.parse dataJSONStr
+#     delete self.queries[key]
+#     return @
+#   ###*
+#    * next 让等待的下一条查询执行
+#    * @param  {String}   key 查询条件对应的hash key
+#    * @return {QueryCache}  
+#   ###
+#   next : (key) ->
+#     self = @
+#     if key
+#       queries = self.queries
+#       query = queries[key]
+#       if query?.execFunctions.length != 0
+#         execFunction = query.execFunctions.pop()
+#         execFunction null, null
 
 module.exports = QueryCache

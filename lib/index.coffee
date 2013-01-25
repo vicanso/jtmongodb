@@ -170,7 +170,7 @@ class JTMongodb
   ###
   save : (dbName, collectionName, args...) ->
     client = @client
-    args.unshift dbName, collectionName 'save'
+    args.unshift dbName, collectionName, 'save'
     client.handle.apply client, args
     return @
   ###*
