@@ -41,7 +41,7 @@ class JTMongodb
     @client.getServerInfo dbName, cbf
     return @
   ###*
-   * getClient 获取dbName对应的的db client对象（该对象有JTMongodb的所有方法，除'getClient createConnection set'外，且所有的方法调用时不再需要传参数dbName和collectionName）
+   * getClient 获取dbName对应的的db client对象（该对象有JTMongodb的所有方法，除'getClient set'外，且所有的方法调用时不再需要传参数dbName和collectionName）
    * @param  {String} dbName 数据库的标识名
    * @param  {String} {optional} collectionName collection的名字
    * @return {[type]}        [description]
@@ -49,7 +49,7 @@ class JTMongodb
   getClient : (dbName, collectionName) ->
     self = @
     client = {}
-    unwrapFunctions = 'getClient createConnection set'.split ' '
+    unwrapFunctions = 'getClient set'.split ' '
     _.each _.functions(self), (funcName) ->
       if _.indexOf(unwrapFunctions, funcName) == -1
         client[funcName] = (args...) ->
@@ -67,8 +67,10 @@ class JTMongodb
   ###
   getCollection : (args...) ->
     client = @client
-    if _.isFunction args[2]
-      client.collection.apply client, args
+    cbf = _.last args
+    args.length = 2
+    args.push cbf
+    client.collection.apply client, args
     return @
   ###*
    * find mongodb的find方法
@@ -254,7 +256,7 @@ class JTMongodb
         newFields[field] = true
       return newFields
 
-_.each 'ensureIndex dropIndex indexInformation isCapped indexExists stats'.split(' '), (func) ->
+_.each 'ensureIndex dropIndex indexInformation isCapped indexExists stats distinct findAndModify findAndRemove reIndex mapReduce group options geoNear geoHaystackSearch indexes aggregate'.split(' '), (func) ->
   JTMongodb.prototype[func] = (args...) ->
     args.splice 2, 0, func
     @client.handle.apply @client, args

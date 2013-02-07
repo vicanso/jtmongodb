@@ -53,7 +53,7 @@ class Client
       delete config.immediatelyInit
       @mongodbConfigs[dbName] = config
       if immediatelyInit
-        @_init dbName, config.uri, config.options
+        @_init dbName, config.uri, config.options, config.auth
   ###*
    * getServerInfo 返回mongodb服务器信息
    * @param  {String} dbName 数据库的标识名
@@ -209,7 +209,8 @@ class Client
     else
       collectionObj = self.collections[collectionKey]
       if collectionObj
-        cbf null, collectionObj
+        process.nextTick () ->
+          cbf null, collectionObj
       else
         db = self.db dbName
         collectionHandle = (db) ->
@@ -244,9 +245,10 @@ class Client
    * @param  {String} dbName 数据库的标识名
    * @param  {String} uri 数据库连接字符串
    * @param  {Object} options 数据库连接选项，默认值为{fsync : false}
+   * @param  {Object} auth 认证信息
    * @return {Client} 返回Client对象
   ###
-  _init : (dbName, uri, options = {fsync : false}) ->
+  _init : (dbName, uri, options = {fsync : false}, auth) ->
     self = @
     uris = uri.split ','
     connectionInfos = {}
@@ -273,9 +275,20 @@ class Client
           if err
             logger.error "init db #{dbName} fail, msg:#{err}"
           else
-            logger.info "init db #{dbName} success!"
-            self.db dbName, db
-            self.dbInfo dbName, 'complete'
+            completeCbf = () ->
+              logger.info "init db #{dbName} success!"
+              self.db dbName, db
+              self.dbInfo dbName, 'complete'
+            if auth
+              auth.type ?= 'admin'
+              db[auth.type] (err, authenticateDb) ->
+                authenticateDb.authenticate auth.name, auth.pwd, (err, result) ->
+                  if err
+                    logger.error 'authenticate is fail, #{err}'
+                  else
+                    completeCbf()
+            else
+              completeCbf()
         self.dbInfo dbName, 'initializing'
     return self
   ###*
