@@ -223,7 +223,10 @@ class Client
         if db
           collectionHandle db
         else
-          self._addDbInitSuccessCbf dbName, collectionHandle
+          if !self.dbInfo dbName
+            cbf new Error "the db #{dbName} is not init!"
+          else
+            self._addDbInitSuccessCbf dbName, collectionHandle
     return self
   ###*
    * schema 设置或者获取schema（传入的schema有可能会变转换，因些有可能设置和获取到的schema结构有所变化）
