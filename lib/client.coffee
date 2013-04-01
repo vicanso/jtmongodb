@@ -90,7 +90,7 @@ class Client
         self.set key, value
     else if value?
       switch key
-        when 'log' 
+        when 'logger' 
         then logger = value
         when 'queryTime' 
         then LOG_QUERY_TIME()
