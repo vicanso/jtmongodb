@@ -169,7 +169,7 @@ class Client
     queryFunctions = self.opts.queryFunctions
     wrapCbf = (err, data) ->
       if data && _.isFunction data.toArray
-        toArrayArgs = [data, cbf]
+        toArrayArgs = [data, wrapCbf]
         toArrayArgs._se = se
         self.tasks.add self._toArray, toArrayArgs, self
       else
