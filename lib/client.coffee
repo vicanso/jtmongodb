@@ -248,10 +248,9 @@ class Client
    * @param  {String} dbName 数据库的标识名
    * @param  {String} uri 数据库连接字符串
    * @param  {Object} options 数据库连接选项，默认值为{fsync : false}
-   * @param  {Object} auth 认证信息
    * @return {Client} 返回Client对象
   ###
-  _init : (dbName, uri, options = {fsync : false}, auth) ->
+  _init : (dbName, uri, options = {fsync : false}) ->
     self = @
     uris = uri.split ','
     connectionInfos = {}
@@ -261,18 +260,24 @@ class Client
       if uri.path
         db = uri.path.substring 1
       if db
-        if !connectionInfos[db]
-          connectionInfos[db] = []
-        connectionInfos[db].push {
+        connectionInfos[db] ?= {}
+        connectionInfos[db].servers ?= []
+        connectionInfos[db].auth = uri.auth
+        connectionInfos[db].servers.push {
           host : uri.hostname
           port : GLOBAL.parseInt uri.port || 47017
         }
     _.each connectionInfos, (value, name) ->
+      authInfos = value.auth.split ':'
+      auth = 
+        name : authInfos[0]
+        pwd : authInfos[1]
+      delete value.auth
       if !self.dbInfo dbName
         serverOptionsKey = 'readPreference ssl slaveOk poolSize socketOptions logger auto_reconnect disableDriverBSONSizeCheck'.split ' '
         replicaSetOptions = _.pick options, 'rs_name read_secondary socketOptions'.split ' '
         serverOptions = _.pick options, serverOptionsKey
-        server = self._getServer value, serverOptions, replicaSetOptions
+        server = self._getServer value.servers, serverOptions, replicaSetOptions
         db = new mongodb.Db name, server, options
         db.open (err, db) ->
           if err
