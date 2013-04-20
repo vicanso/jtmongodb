@@ -205,8 +205,8 @@ class JTMongodb
   ###
   update : (dbName, collectionName, query, updateData, options, cbf = noop) ->
     updateData['$set'] ?= {}
-    updateData['$set'].modifiedAt = new Date
-    delete updateData['$set'].createdAt 
+    # updateData['$set'].modifiedAt = new Date
+    # delete updateData['$set'].createdAt 
     if _.isFunction options
       cbf = options
       options = null
