@@ -165,7 +165,11 @@ class Client
     se = self._serializationQuery _.toArray arguments
     key = cacheObj.key se, handleName
     tasks = self.tasks
-    ttl = self.opts.ttl
+    options = _.last args
+    if options && options._ttl
+      ttl = options._ttl
+    else
+      ttl = self.opts.ttl
     queryFunctions = self.opts.queryFunctions
     wrapCbf = (err, data) ->
       if data && _.isFunction data.toArray
